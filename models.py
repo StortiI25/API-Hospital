@@ -12,9 +12,29 @@ class Usuario(Base):
     __tablename__ = "usuarios"
 
     id = Column(Integer, primary_key=True, index=True)
-    nome = Column(String, index=True)
+    nome = Column(String, nullable=False)
     email = Column(String, unique=True, index=True)
     senha = Column(String)
-    tipo = Column(String)
 
-Base.metadata.create_all(bind=engine)
+    medicos = relationship("Medico", back_populates="usuario", uselist=False)
+    pacientes = relationship("Paciente", back_populates="usuario", uselist=False)
+
+
+class Paciente(Base):
+    __tablename__ = "pacientes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, nullable=False)
+    idade = Column(Integer, nullable=False)
+    endereco = Column(String)
+
+    usuario = relationship("Usuario", back_populates="pacientes")
+
+class Medico(Base):
+    __tablename__ = "medicos"
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, nullable=False)
+    especialidade = Column(String, nullable=False)
+
+    usuario = relationship("Usuario", back_populates="medicos")
+
