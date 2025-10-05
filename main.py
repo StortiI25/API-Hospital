@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models import SessionLocal, Usuario
+from models import SessionLocal, Usuario, Medico
 from passlib.hash import bcrypt
-from schemas import UsuarioCreate, UsuarioLogin
+from schemas import UsuarioCreate, UsuarioLogin, MedicoCreate, MedicoOut
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
@@ -81,4 +81,21 @@ def login_usuario(usuario: UsuarioLogin, db: Session = Depends(get_db)):
         data={"sub": db_usuario.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/medico", response_model=MedicoOut)
+def create_medico(medico: MedicoCreate, db: Session = Depends(get_db), usuario: Usuario = Depends(get_usuario_atual)):
+    db_medico = db.query(Medico).filter(Medico.nome == medico.nome).first()
+    if db_medico:
+        raise HTTPException(status_code=400, detail="Médico já registrado")
+    db_medico = Medico(nome=medico.nome, especialidade=medico.especialidade)
+    db.add(db_medico)
+    db.commit()
+    db.refresh(db_medico)
+    return db_medico
+
+@app.post("/medico",response_model=list[MedicoOut])
+def get_medico(db: Session = Depends(get_db), usuario: Usuario = Depends()):
+    medicos = db.query(Medico).all()
+    return medicos
+
 
